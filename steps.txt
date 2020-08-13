@@ -1,0 +1,107 @@
+155 side project not connected to main project:
+    create a counter application with socket.io, each socket will have a counter button and when the button is pressed event is emited which received on the server
+    increases the counter and sends increased counter to all sockets:
+    a) on the server, index.js, create 'count' variable and send count to each socket when each individual socket connected, using socket.emit
+    b) on the client side, chat.js, receive event sent from the server above by using 'socket.on' where socket = io(), and receive the count and console.log it
+    c) create a button on client side, index.html, add event listener 'click' that emits event 'increment' on socket using 'socket.emit'
+    d) on the server, index.js, listen for the above event using 'socket.on', increase the count, and then send the count to all sockets connected using 'io.emit'
+
+156 a) delete above increment button, and provide welcome message to each socket on joining in the conversation
+    b) on the front end create a form with input field which will send message to server when form submitted, server receives the message and sends it to ass sockets    
+
+157 whenever new user joins inform all other users that somebody new entered chat room, use 'socket.broadcast.emit', also when specific user leaves inform others using 'socket.on('disconnect', )    
+
+158 sharing your location,
+    in the front end create a button that will share coordinates of the client with other sockets,
+    a) create a button in index.html, wire up the click event 
+    b) when clicked: check for support 'navigator.geolocation' and then send the coordinates to server, use 'navigator.geolocation.getCurrentPosition((position) => {})'
+    c) emit an event from socket above by sending coordinates in the object
+    d) receive above event on the server and share it with other sockets
+    e) instead of object with coordinates send a link to google maps, use `https://google.com/maps?q=${message.latitude},${message.longitude}`
+
+159 event acknowledgement, confirming that an event is received
+    a) who is emitting an event defines a callback function as the last argument, receiver receives a pointer to function, 
+       does something requested and then calls the function providing some arguments    
+    b) npm install bad-words, package that tests for profanity
+    c) check for profanity in the message sent from socket to the server, using "filter.isProfane(message)" from above package,
+       call callback with appropriate message, emit message to other sockets only if not profane 
+    d) send location from one socket to the server, from the server resend location to all other sockets and send acknowledgement to the specific socket
+
+160 form and button states
+    a) disable form when submitted and sent to server by disabling button by setting attribute "disabled" to "disabled", 
+       and then enable when acknowledgement received from server, also clear the input field when form submitted and focus the field again
+    b) do similar with location button, disable when sending geolocation and enable when acknowledged
+
+161 rendering messages
+    a) copy those scripts below into your html, above socket.io import
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.1/mustache.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.6.0/qs.min.js"></script>        
+    b) define a template in index.html by setting up script tag
+    c) when message delivered from server, render it to the html document, in the template like a dynamic variable
+
+162 rendering location messages 
+    a) socket sends its location, server receives it and emits 'locationMessage' event to all, socket receives and renders template in index.html with location url
+
+163 working with time, add a timestamp to all messages, createdAt
+    a) replace the argument sent with 'message' on the server to send an object with properties 'text' and 'createdAt'
+    b) create a new file and define a function that will generate an object for the message argument above
+    c) in all places where we emit message instead of providing an object call the above function
+    d) adjust client to expect object and not single message    
+    e) use "moment.js" library to structure date string
+
+164 timestamps for location messages 
+    a) show the timestamp with the url shown when sending location, create function, update server emiting "locationMessage", update template rendering to send 
+       and receive an object with properties "url" and "createdAt", render the timing along the link
+
+165 styling the chat app 
+    a) import files from the lecture
+    b) follow the changes to index.html from lecture
+
+166 join page
+    follow the instructions from the lesson
+
+167 socket.io rooms
+    a) when the query string is passed from the form we have "username" and "room", in the chat.js, parse them using qs package we installed, 
+       access location.search in console and destructure from it above properties
+    b) emit new event from socket called "join" with the above "username" and "room" values sent to server, in chat.js 
+    c) in index.js set a listener for the above event "join", and use "socket.join(room)" to join specific socket to specific room
+    d) move 'welcome' and 'new user joined' messages to the "join" response on the server and limit it to the specific room,
+       send 'welcome' message to specific socket and 'new user joined' to all sockets except this one in this room, use 'socket.broadcast.to(room).emit'
+
+168 storing users 
+    a) in the new file keep track of users, by defining functions to add, remove and get user, also to get users rooms, define users as an array
+    b) define "addUser" function that accepts user in the form "{id, username, room}" and add it to array, first checking that there is no user already  
+       in the room with same name, trim the username and room, return object with "user" or "error" properties
+    c) define function "removeUser" that accepts an id and removes user from the array and returns removed user 
+
+169 storing users 2
+    a) create "getUser" function that accepts id and returns that user object 
+    b) create "getUsersInRoom" that accepts room name and returns users in the room
+
+170 tracking users joining and leaving
+    a) when user joins the room add it to users, use "socket.id" for id, check for username and room valid
+    b) set up the callback function on the client side for 'join' event, which will notify user if joining unsuccessful, eg username taken, provide error parameter
+    c) if user unable to 'join' in index.js call callback with error 
+    d) on user disconnect remove user from the room and send message to others in the room that user left
+    e) on client side when user joins check for error and if so inform the user and redirect to homepage using "location.href = '/'"
+
+171 sending messages to rooms 
+    a) change on server 'sendMessage' and 'sendLocation' events to be sent only to rooms where user is currently in 
+    b) edit locationMessage sending to send also username besides url, and display that username in the chat.html with message 
+    c) edit sending messages to display user who sent the message, or 'admin' if the message is general
+
+172 rendering user list 
+    a) emit 'roomData' event when user enters the room, emit the event sending info about room and users in the room, from server to client
+    b) emit the same event as above when user leaves the room
+    c) listen to the above event on the client side, create template for users list, and render users in the left hand side with the name of room
+
+173 automatic scrolling
+    a) create function "autoscroll", in chat.js, which scrolls to the bottom if we were at bottom before last message arrived, otherwise stays on level where we were    
+    b) apply the function when new message arrives, function has no arguments
+
+174 deploying chat application
+    a) commit files to git, ignore node_modules
+    b) push code up to git hub repository
+    c) push code to heroku 
+    
